@@ -1,46 +1,29 @@
 using UnityEngine;
 using UnityEditor;
-
-namespace AICommand {
-
-[FilePath("UserSettings/AICommandSettings.asset",
-          FilePathAttribute.Location.ProjectFolder)]
-public sealed class AICommandSettings : ScriptableSingleton<AICommandSettings>
+namespace AICommand
 {
-    public string apiKey = null;
-    public int timeout = 0;
-    public void Save() => Save(true);
-    void OnDisable() => Save();
-}
-
-sealed class AICommandSettingsProvider : SettingsProvider
-{
-    public AICommandSettingsProvider()
-      : base("Project/AI Command", SettingsScope.Project) {}
-
-    public override void OnGUI(string search)
+    public class AICommandSettings : ScriptableObject
     {
-        var settings = AICommandSettings.instance;
+        public string model = "deepseek-coder-v2:16b"; // Default model name, adjust as needed
 
-        var key = settings.apiKey;
-        var timeout = settings.timeout;
+        private static AICommandSettings _instance;
 
-        EditorGUI.BeginChangeCheck();
-
-        key = EditorGUILayout.TextField("API Key", key);
-        timeout = EditorGUILayout.IntField("Timeout", timeout);
-
-        if (EditorGUI.EndChangeCheck())
+        public static AICommandSettings instance
         {
-            settings.apiKey = key;
-            settings.timeout = timeout;
-            settings.Save();
+            get
+            {
+                if (_instance == null)
+                {
+                    _instance = Resources.Load<AICommandSettings>("AICommandSettings");
+                    if (_instance == null)
+                    {
+                        _instance = CreateInstance<AICommandSettings>();
+                        AssetDatabase.CreateAsset(_instance, "Assets/Resources/AICommandSettings.asset");
+                        AssetDatabase.SaveAssets();
+                    }
+                }
+                return _instance;
+            }
         }
     }
-
-    [SettingsProvider]
-    public static SettingsProvider CreateCustomSettingsProvider()
-      => new AICommandSettingsProvider();
 }
-
-} // namespace AICommand
